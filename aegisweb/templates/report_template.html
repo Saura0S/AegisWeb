@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisWeb Security Audit — {{ target_domain }}</title>
+    <style>
+        :root {
+            --bg: #090d16;
+            --surface: #111827;
+            --surface-hover: #1f2937;
+            --border: #374151;
+            --text: #f9fafb;
+            --text-dim: #9ca3af;
+            --cyan: #00f2fe;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --yellow: #f59e0b;
+            --red: #ef4444;
+            --purple: #a855f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 2rem; line-height: 1.6; }
+        .container { max-width: 1280px; margin: 0 auto; }
+
+        /* Header */
+        header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+        .brand h1 { font-size: 2.2rem; color: #fff; display: flex; align-items: center; gap: 0.75rem; }
+        .brand h1 span { color: var(--cyan); }
+        .brand p { color: var(--text-dim); font-size: 0.95rem; margin-top: 0.4rem; }
+
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .btn-print { background: var(--cyan); color: #000; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s; }
+        .btn-print:hover { transform: translateY(-2px); }
+
+        .score-circle { width: 90px; height: 90px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 3px solid var(--cyan); background: #0f172a; box-shadow: 0 0 15px rgba(0,242,254,0.3); }
+        .score-grade { font-size: 2rem; font-weight: 800; color: var(--cyan); line-height: 1; }
+        .score-lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
+
+        /* Tab Switcher */
+        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 0.75rem 1.5rem; font-size: 1.05rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-btn.active { background: var(--surface); color: var(--cyan); border: 1px solid var(--border); }
+        .tab-btn:hover:not(.active) { color: #fff; background: var(--surface-hover); }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
+        .stat-num { font-size: 2rem; font-weight: 700; color: var(--cyan); }
+        .stat-lbl { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+
+        /* Executive Cards */
+        .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid var(--cyan); }
+        .finding-card.severity-CRITICAL { border-left-color: var(--red); }
+        .finding-card.severity-HIGH { border-left-color: var(--yellow); }
+        .finding-card.severity-MEDIUM { border-left-color: var(--blue); }
+        .finding-card.severity-LOW { border-left-color: var(--green); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+        .card-title { font-size: 1.2rem; font-weight: 700; color: #fff; }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .badge-CRITICAL { background: rgba(239, 68, 68, 0.2); color: var(--red); border: 1px solid var(--red); }
+        .badge-HIGH { background: rgba(245, 158, 11, 0.2); color: var(--yellow); border: 1px solid var(--yellow); }
+        .badge-MEDIUM { background: rgba(59, 130, 246, 0.2); color: var(--blue); border: 1px solid var(--blue); }
+        .badge-LOW { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+
+        .qa-block { margin-bottom: 0.75rem; }
+        .qa-title { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.4rem; }
+        .qa-desc { font-size: 0.95rem; color: #e5e7eb; }
+
+        /* Code Blocks */
+        pre { background: #050811; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; overflow-x: auto; color: #a5f3fc; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; margin-top: 1rem; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { background: #0d1322; padding: 0.85rem; text-align: left; font-size: 0.85rem; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+        td { padding: 0.85rem; border-bottom: 1px solid #1e293b; font-size: 0.9rem; }
+
+        .hidden { display: none; }
+
+        @media print {
+            body { background: #fff; color: #000; padding: 0; }
+            header, .stat-card, .finding-card, table, pre { border-color: #ccc !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
+            .btn-print, .tab-bar { display: none !important; }
+            .card-title, .qa-title, h1, h2 { color: #000 !important; }
+            .qa-desc, td, th { color: #333 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <h1>🛡️ <span>AegisWeb</span> Security Audit</h1>
+                <p>Target: <strong>{{ target_domain }}</strong> | Scanned: {{ timestamp }} | Auditor: <a href="https://github.com/Saura0S" style="color: var(--cyan); text-decoration: none;">@Saura0S</a></p>
+            </div>
+            <div class="header-actions">
+                <div class="score-circle">
+                    <div class="score-grade">{{ grade }}</div>
+                    <div class="score-lbl">{{ score_percentage }}% Score</div>
+                </div>
+                <button class="btn-print" onclick="window.print()">🖨️ Save as PDF / Print</button>
+            </div>
+        </header>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('executive')">👔 Executive & Business Risk</button>
+            <button class="tab-btn" onclick="switchTab('technical')">💻 Technical & OWASP Deep-Dive</button>
+            <button class="tab-btn" onclick="switchTab('remediation')">🛠️ Ready-to-Paste Remediation</button>
+        </div>
+
+        <!-- Global Metrics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-num">{{ executive_findings|length }}</div>
+                <div class="stat-lbl">Identified Security Gaps</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">{{ ssl_info.days_remaining }}</div>
+                <div class="stat-lbl">SSL Days Remaining</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">{{ email_sec.dmarc_strength }}</div>
+                <div class="stat-lbl">Email Spoofing Protection</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num">{{ exposed_files_count }}</div>
+                <div class="stat-lbl">Sensitive Files Exposed</div>
+            </div>
+        </div>
+
+        <!-- TAB 1: EXECUTIVE VIEW -->
+        <div id="tab-executive">
+            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">👔 Executive Plain-English Risk Brief</h2>
+            {% for item in executive_findings %}
+            <div class="finding-card severity-{{ item.severity }}">
+                <div class="card-header">
+                    <div class="card-title">{{ item.title }}</div>
+                    <span class="badge badge-{{ item.severity }}">{{ item.severity }} Priority</span>
+                </div>
+                <div class="qa-block">
+                    <div class="qa-title">📌 What is this issue?</div>
+                    <div class="qa-desc">{{ item.what_is_it }}</div>
+                </div>
+                <div class="qa-block">
+                    <div class="qa-title">⚠️ Why is this dangerous for your website?</div>
+                    <div class="qa-desc">{{ item.why_dangerous }}</div>
+                </div>
+                <div class="qa-block">
+                    <div class="qa-title">💡 How to fix it in simple steps?</div>
+                    <div class="qa-desc">{{ item.how_to_fix }}</div>
+                </div>
+                <div class="qa-block" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border);">
+                    <div class="qa-title" style="color: var(--purple);">💼 Business & Compliance Impact:</div>
+                    <div class="qa-desc" style="color: #c4b5fd;">{{ item.business_impact }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div class="finding-card">
+                <div class="card-title" style="color: var(--green);">🎉 No critical security gaps detected! Excellent defensive posture.</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- TAB 2: TECHNICAL VIEW -->
+        <div id="tab-technical" class="hidden">
+            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">💻 Technical Security Engineering Audit</h2>
+            
+            <div class="stat-card" style="text-align: left; margin-bottom: 2rem;">
+                <h3 style="color: #fff; margin-bottom: 1rem;">🔒 SSL/TLS Cryptographic Details</h3>
+                <p><strong>Protocol:</strong> {{ ssl_info.protocol_version }} | <strong>Cipher:</strong> {{ ssl_info.cipher }}</p>
+                <p><strong>Issuer:</strong> {{ ssl_info.issuer }} | <strong>Expires:</strong> {{ ssl_info.expires_on }}</p>
+            </div>
+
+            <div class="stat-card" style="text-align: left; margin-bottom: 2rem;">
+                <h3 style="color: #fff; margin-bottom: 1rem;">📧 Email Authentication (DNS)</h3>
+                <p><strong>SPF Record:</strong> <code>{{ email_sec.spf_record }}</code></p>
+                <p><strong>DMARC Record:</strong> <code>{{ email_sec.dmarc_record }}</code></p>
+            </div>
+
+            <h3 style="color: #fff; margin-bottom: 0.75rem;">🛡️ Technical Defensive Headers Audit</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Security Header</th>
+                        <th>Status</th>
+                        <th>CWE Standard</th>
+                        <th>OWASP Standard</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in headers_audit.present_headers %}
+                    <tr>
+                        <td><strong>{{ h.header }}</strong></td>
+                        <td style="color: var(--green);">✓ PRESENT</td>
+                        <td style="color: var(--text-dim);">Enforced</td>
+                        <td style="color: var(--text-dim);">Compliant</td>
+                    </tr>
+                    {% endfor %}
+                    {% for h in headers_audit.missing_headers %}
+                    <tr>
+                        <td><strong>{{ h.header }}</strong></td>
+                        <td style="color: var(--red);">✗ MISSING</td>
+                        <td style="color: var(--yellow);">{{ h.cwe }}</td>
+                        <td style="color: var(--purple);">{{ h.owasp }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB 3: REMEDIATION VIEW -->
+        <div id="tab-remediation" class="hidden">
+            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">🛠️ Auto-Generated Remediation Code Snippets</h2>
+            
+            <h3 style="color: #fff; margin-top: 1rem;">1. Nginx Server Configuration (`nginx.conf`)</h3>
+            <pre><code>{{ nginx_patch }}</code></pre>
+
+            <h3 style="color: #fff; margin-top: 1.5rem;">2. Apache / `.htaccess` Directive</h3>
+            <pre><code>{{ apache_patch }}</code></pre>
+        </div>
+
+        <footer style="text-align: center; margin-top: 3rem; color: var(--text-dim); font-size: 0.85rem;">
+            Generated by <strong>AegisWeb</strong> v1.0.0 | Developed by <a href="https://github.com/Saura0S" target="_blank" style="color: var(--cyan);">@Saura0S</a>
+        </footer>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.getElementById('tab-executive').classList.add('hidden');
+            document.getElementById('tab-technical').classList.add('hidden');
+            document.getElementById('tab-remediation').classList.add('hidden');
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

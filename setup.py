@@ -7,6 +7,10 @@ setup(
     author="Saura0S",
     url="https://github.com/Saura0S/AegisWeb",
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        "aegisweb": ["templates/*.html"],
+    },
     install_requires=[
         "requests>=2.31.0",
         "rich>=13.7.0",

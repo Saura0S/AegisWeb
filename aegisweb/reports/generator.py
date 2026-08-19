@@ -84,14 +84,25 @@ class ReportGenerator:
             "apache_patch": self.data.get("apache_patch", "")
         }
 
+        html_out = ""
         if JINJA_AVAILABLE:
-            env = Environment(loader=FileSystemLoader(template_dir))
-            template = env.get_template("report_template.html")
-            html_out = template.render(template_vars)
-        else:
+            try:
+                env = Environment(loader=FileSystemLoader(template_dir))
+                template = env.get_template("report_template.html")
+                html_out = template.render(template_vars)
+            except Exception:
+                pass
+
+        if not html_out:
             template_path = os.path.join(template_dir, "report_template.html")
-            with open(template_path, "r", encoding="utf-8") as f:
-                html_out = f.read()
+            if os.path.exists(template_path):
+                with open(template_path, "r", encoding="utf-8") as f:
+                    template_str = f.read()
+                if JINJA_AVAILABLE:
+                    template = Environment().from_string(template_str)
+                    html_out = template.render(template_vars)
+                else:
+                    html_out = template_str
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_out)
