@@ -22,7 +22,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding: 2rem; line-height: 1.6; }
-        .container { max-width: 1280px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
 
         /* Header */
         header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
@@ -38,20 +38,27 @@
         .score-grade { font-size: 2.2rem; font-weight: 800; color: var(--cyan); line-height: 1; }
         .score-lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
 
-        /* Tab Switcher */
-        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap; }
-        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
-        .tab-btn.active { background: var(--surface); color: var(--cyan); border: 1px solid var(--border); }
-        .tab-btn:hover:not(.active) { color: #fff; background: var(--surface-hover); }
+        /* CISO Verdict Banner */
+        .verdict-card { background: linear-gradient(135deg, #111827 0%, #172554 100%); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem; width: 100%; }
+        .verdict-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .verdict-title { font-size: 1.25rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+        .verdict-body { color: #cbd5e1; margin-top: 0.75rem; font-size: 0.95rem; }
 
         /* Stats Grid */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; width: 100%; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
         .stat-num { font-size: 1.9rem; font-weight: 700; color: var(--cyan); }
         .stat-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
 
+        /* Tab Switcher */
+        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap; width: 100%; }
+        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-btn.active { background: var(--surface); color: var(--cyan); border: 1px solid var(--border); }
+        .tab-btn:hover:not(.active) { color: #fff; background: var(--surface-hover); }
+
         /* Finding Cards */
-        .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid var(--cyan); }
+        .tab-content { width: 100%; }
+        .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid var(--cyan); width: 100%; }
         .finding-card.severity-CRITICAL { border-left-color: var(--red); }
         .finding-card.severity-HIGH { border-left-color: var(--yellow); }
         .finding-card.severity-MEDIUM { border-left-color: var(--blue); }
@@ -73,7 +80,7 @@
         pre { background: #050811; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; overflow-x: auto; color: #a5f3fc; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; margin-top: 0.75rem; }
 
         /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
         th { background: #0d1322; padding: 0.85rem; text-align: left; font-size: 0.85rem; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); }
         td { padding: 0.85rem; border-bottom: 1px solid #1e293b; font-size: 0.9rem; }
 
@@ -81,16 +88,17 @@
 
         @media print {
             body { background: #fff; color: #000; padding: 0; }
-            header, .stat-card, .finding-card, table, pre { border-color: #ccc !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
+            header, .stat-card, .finding-card, table, pre, .verdict-card { border-color: #ccc !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
             .btn-print, .tab-bar { display: none !important; }
-            .card-title, .qa-title, h1, h2 { color: #000 !important; }
-            .qa-desc, td, th { color: #333 !important; }
+            .card-title, .qa-title, h1, h2, .verdict-title { color: #000 !important; }
+            .qa-desc, td, th, .verdict-body { color: #333 !important; }
             .hidden { display: block !important; }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <header>
             <div class="brand">
                 <h1>🛡️ <span>AegisWeb</span> Enterprise Audit</h1>
@@ -104,15 +112,6 @@
                 <button class="btn-print" onclick="window.print()">🖨️ Save as PDF / Print</button>
             </div>
         </header>
-
-        <!-- Tab Bar -->
-        <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('executive')">👔 Executive Plain-English</button>
-            <button class="tab-btn" onclick="switchTab('technical')">💻 Technical & OWASP Deep-Dive</button>
-            <button class="tab-btn" onclick="switchTab('compliance')">📜 Regulatory Compliance</button>
-            <button class="tab-btn" onclick="switchTab('roadmap')">🗺️ CISO 30-Day Roadmap</button>
-            <button class="tab-btn" onclick="switchTab('remediation')">🛠️ Patch Studio</button>
-        </div>
 
         <!-- Global Metrics -->
         <div class="stats-grid">
@@ -132,14 +131,16 @@
                 <div class="stat-num">{{ compliance.overall_governance_score }}%</div>
                 <div class="stat-lbl">Compliance Readiness</div>
             </div>
+        </div>
+
         <!-- CISO Verdict Banner -->
-        <div class="stat-card" style="text-align: left; margin-bottom: 2rem; border-left: 6px solid {{ 'var(--green)' if vulnerability_pct == 0 else ('var(--yellow)' if vulnerability_pct <= 45 else 'var(--red)') }}; background: linear-gradient(135deg, #111827 0%, #172554 100%);">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div class="verdict-card" style="border-left: 6px solid {{ 'var(--green)' if vulnerability_pct == 0 else ('var(--yellow)' if vulnerability_pct <= 45 else 'var(--red)') }};">
+            <div class="verdict-header">
                 <div>
-                    <h3 style="font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="verdict-title">
                         👨‍💻 <span>Lead Security Architect Verdict by Saurabh (@Saura0S)</span>
-                    </h3>
-                    <p style="color: #cbd5e1; margin-top: 0.5rem; font-size: 1rem;">
+                    </div>
+                    <div class="verdict-body">
                         {% if vulnerability_pct == 0 %}
                             🎉 <strong>Target demonstrates an ironclad defense posture (0% Vulnerability Exposure Risk).</strong> All evaluated controls, encryption standards, security headers, and secret protections are fully hardened and compliant.
                         {% elif vulnerability_pct <= 45 %}
@@ -147,17 +148,26 @@
                         {% else %}
                             🚨 <strong>CRITICAL: Target exhibits {{ vulnerability_pct }}% Vulnerability Exposure Risk.</strong> Multiple high-severity misconfigurations or attack surfaces were detected. Immediate remediation is advised following the CISO 30-day roadmap.
                         {% endif %}
-                    </p>
+                    </div>
                 </div>
-                <div style="text-align: center; min-width: 140px; padding: 0.75rem 1.25rem; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid var(--border);">
-                    <div style="font-size: 2rem; font-weight: 800; color: {{ 'var(--green)' if vulnerability_pct == 0 else ('var(--yellow)' if vulnerability_pct <= 45 else 'var(--red)') }};">{{ vulnerability_pct }}%</div>
-                    <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Vulnerability Risk</div>
+                <div style="text-align: center; min-width: 140px; padding: 0.75rem 1.25rem; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 2.2rem; font-weight: 800; color: {{ 'var(--green)' if vulnerability_pct == 0 else ('var(--yellow)' if vulnerability_pct <= 45 else 'var(--red)') }};">{{ vulnerability_pct }}%</div>
+                    <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Vulnerability Risk</div>
                 </div>
             </div>
         </div>
 
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('executive')">👔 Executive Plain-English</button>
+            <button class="tab-btn" onclick="switchTab('technical')">💻 Technical & OWASP Deep-Dive</button>
+            <button class="tab-btn" onclick="switchTab('compliance')">📜 Regulatory Compliance</button>
+            <button class="tab-btn" onclick="switchTab('roadmap')">🗺️ CISO 30-Day Roadmap</button>
+            <button class="tab-btn" onclick="switchTab('remediation')">🛠️ Patch Studio</button>
+        </div>
+
         <!-- TAB 1: EXECUTIVE VIEW -->
-        <div id="tab-executive">
+        <div id="tab-executive" class="tab-content">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">👔 Executive Plain-English Risk Brief</h2>
             {% for item in executive_findings %}
             <div class="finding-card severity-{{ item.severity }}">
@@ -173,6 +183,16 @@
                     <div class="qa-title">⚠️ Why is this dangerous for your website?</div>
                     <div class="qa-desc">{{ item.why_dangerous }}</div>
                 </div>
+                <div class="qa-block">
+                    <div class="qa-title">📍 Where was this found?</div>
+                    <div class="qa-desc"><code>{{ item.source_location }}</code></div>
+                </div>
+                {% if item.code_snippet %}
+                <div class="qa-block">
+                    <div class="qa-title">🔍 Code Evidence Snippet:</div>
+                    <pre><code>{{ item.code_snippet }}</code></pre>
+                </div>
+                {% endif %}
                 <div class="qa-block">
                     <div class="qa-title">💡 How to fix it in simple steps?</div>
                     <div class="qa-desc">{{ item.how_to_fix }}</div>
@@ -190,7 +210,7 @@
         </div>
 
         <!-- TAB 2: TECHNICAL VIEW -->
-        <div id="tab-technical" class="hidden">
+        <div id="tab-technical" class="tab-content hidden">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">💻 Technical Security Engineering Audit</h2>
             
             <div class="stat-card" style="text-align: left; margin-bottom: 2rem;">
@@ -219,7 +239,7 @@
                     {% for h in headers_audit.present_headers %}
                     <tr>
                         <td><strong>{{ h.header }}</strong></td>
-                        <td style="color: var(--green);">✓ PRESENT</td>
+                        <td style="color: var(--green); font-weight: 700;">✔ SECURE</td>
                         <td style="color: var(--text-dim);">Enforced</td>
                         <td style="color: var(--text-dim);">Compliant</td>
                     </tr>
@@ -227,7 +247,7 @@
                     {% for h in headers_audit.missing_headers %}
                     <tr>
                         <td><strong>{{ h.header }}</strong></td>
-                        <td style="color: var(--red);">✗ MISSING</td>
+                        <td style="color: var(--red); font-weight: 700;">✖ VULNERABLE</td>
                         <td style="color: var(--yellow);">{{ h.cwe }}</td>
                         <td style="color: var(--purple);">{{ h.owasp }}</td>
                     </tr>
@@ -237,7 +257,7 @@
         </div>
 
         <!-- TAB 3: COMPLIANCE VIEW -->
-        <div id="tab-compliance" class="hidden">
+        <div id="tab-compliance" class="tab-content hidden">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">📜 Regulatory Compliance & Standard Readiness</h2>
             
             <table>
@@ -265,7 +285,7 @@
         </div>
 
         <!-- TAB 4: ROADMAP VIEW -->
-        <div id="tab-roadmap" class="hidden">
+        <div id="tab-roadmap" class="tab-content hidden">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">🗺️ CISO 30-Day Remediation Roadmap</h2>
             
             <div class="finding-card severity-CRITICAL">
@@ -288,7 +308,7 @@
         </div>
 
         <!-- TAB 5: REMEDIATION VIEW -->
-        <div id="tab-remediation" class="hidden">
+        <div id="tab-remediation" class="tab-content hidden">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">🛠️ Auto-Generated Remediation Code Snippets</h2>
             
             <h3 style="color: #fff; margin-top: 1rem;">1. Nginx Server Configuration (`nginx.conf`)</h3>
@@ -308,11 +328,12 @@
 
     <script>
         function switchTab(tabId) {
-            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
 
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (event && event.target) event.target.classList.add('active');
         }
     </script>
 </body>
