@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AegisWeb Security Audit — {{ target_domain }}</title>
+    <title>AegisWeb Enterprise Security Audit — {{ target_domain }}</title>
     <style>
         :root {
             --bg: #090d16;
@@ -34,23 +34,23 @@
         .btn-print { background: var(--cyan); color: #000; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s; }
         .btn-print:hover { transform: translateY(-2px); }
 
-        .score-circle { width: 90px; height: 90px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 3px solid var(--cyan); background: #0f172a; box-shadow: 0 0 15px rgba(0,242,254,0.3); }
-        .score-grade { font-size: 2rem; font-weight: 800; color: var(--cyan); line-height: 1; }
+        .score-circle { width: 95px; height: 95px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 3px solid var(--cyan); background: #0f172a; box-shadow: 0 0 15px rgba(0,242,254,0.3); }
+        .score-grade { font-size: 2.2rem; font-weight: 800; color: var(--cyan); line-height: 1; }
         .score-lbl { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
 
         /* Tab Switcher */
-        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
-        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 0.75rem 1.5rem; font-size: 1.05rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap; }
+        .tab-btn { background: transparent; border: none; color: var(--text-dim); padding: 0.75rem 1.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
         .tab-btn.active { background: var(--surface); color: var(--cyan); border: 1px solid var(--border); }
         .tab-btn:hover:not(.active) { color: #fff; background: var(--surface-hover); }
 
         /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; text-align: center; }
-        .stat-num { font-size: 2rem; font-weight: 700; color: var(--cyan); }
-        .stat-lbl { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+        .stat-num { font-size: 1.9rem; font-weight: 700; color: var(--cyan); }
+        .stat-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
 
-        /* Executive Cards */
+        /* Finding Cards */
         .finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 5px solid var(--cyan); }
         .finding-card.severity-CRITICAL { border-left-color: var(--red); }
         .finding-card.severity-HIGH { border-left-color: var(--yellow); }
@@ -70,7 +70,7 @@
         .qa-desc { font-size: 0.95rem; color: #e5e7eb; }
 
         /* Code Blocks */
-        pre { background: #050811; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; overflow-x: auto; color: #a5f3fc; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; margin-top: 1rem; }
+        pre { background: #050811; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; overflow-x: auto; color: #a5f3fc; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; margin-top: 0.75rem; }
 
         /* Tables */
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
@@ -85,6 +85,7 @@
             .btn-print, .tab-bar { display: none !important; }
             .card-title, .qa-title, h1, h2 { color: #000 !important; }
             .qa-desc, td, th { color: #333 !important; }
+            .hidden { display: block !important; }
         }
     </style>
 </head>
@@ -92,13 +93,13 @@
     <div class="container">
         <header>
             <div class="brand">
-                <h1>🛡️ <span>AegisWeb</span> Security Audit</h1>
-                <p>Target: <strong>{{ target_domain }}</strong> | Scanned: {{ timestamp }} | Auditor: <a href="https://github.com/Saura0S" style="color: var(--cyan); text-decoration: none;">@Saura0S</a></p>
+                <h1>🛡️ <span>AegisWeb</span> Enterprise Audit</h1>
+                <p>Target: <strong>{{ target_domain }}</strong> | Scanned: {{ timestamp }} | CISO Audit Lead: <a href="https://github.com/Saura0S" style="color: var(--cyan); text-decoration: none;">@Saura0S</a></p>
             </div>
             <div class="header-actions">
                 <div class="score-circle">
                     <div class="score-grade">{{ grade }}</div>
-                    <div class="score-lbl">{{ score_percentage }}% Score</div>
+                    <div class="score-lbl">{{ score_percentage }}% Posture</div>
                 </div>
                 <button class="btn-print" onclick="window.print()">🖨️ Save as PDF / Print</button>
             </div>
@@ -106,9 +107,11 @@
 
         <!-- Tab Bar -->
         <div class="tab-bar">
-            <button class="tab-btn active" onclick="switchTab('executive')">👔 Executive & Business Risk</button>
+            <button class="tab-btn active" onclick="switchTab('executive')">👔 Executive Plain-English</button>
             <button class="tab-btn" onclick="switchTab('technical')">💻 Technical & OWASP Deep-Dive</button>
-            <button class="tab-btn" onclick="switchTab('remediation')">🛠️ Ready-to-Paste Remediation</button>
+            <button class="tab-btn" onclick="switchTab('compliance')">📜 Regulatory Compliance</button>
+            <button class="tab-btn" onclick="switchTab('roadmap')">🗺️ CISO 30-Day Roadmap</button>
+            <button class="tab-btn" onclick="switchTab('remediation')">🛠️ Patch Studio</button>
         </div>
 
         <!-- Global Metrics -->
@@ -118,16 +121,16 @@
                 <div class="stat-lbl">Identified Security Gaps</div>
             </div>
             <div class="stat-card">
-                <div class="stat-num">{{ ssl_info.days_remaining }}</div>
-                <div class="stat-lbl">SSL Days Remaining</div>
+                <div class="stat-num">{{ ssl_info.days_remaining }}d</div>
+                <div class="stat-lbl">SSL Certificate Expiry</div>
             </div>
             <div class="stat-card">
                 <div class="stat-num">{{ email_sec.dmarc_strength }}</div>
-                <div class="stat-lbl">Email Spoofing Protection</div>
+                <div class="stat-lbl">Email Anti-Spoofing Policy</div>
             </div>
             <div class="stat-card">
-                <div class="stat-num">{{ exposed_files_count }}</div>
-                <div class="stat-lbl">Sensitive Files Exposed</div>
+                <div class="stat-num">{{ compliance.overall_governance_score }}%</div>
+                <div class="stat-lbl">Compliance Readiness</div>
             </div>
         </div>
 
@@ -169,13 +172,13 @@
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">💻 Technical Security Engineering Audit</h2>
             
             <div class="stat-card" style="text-align: left; margin-bottom: 2rem;">
-                <h3 style="color: #fff; margin-bottom: 1rem;">🔒 SSL/TLS Cryptographic Details</h3>
-                <p><strong>Protocol:</strong> {{ ssl_info.protocol_version }} | <strong>Cipher:</strong> {{ ssl_info.cipher }}</p>
-                <p><strong>Issuer:</strong> {{ ssl_info.issuer }} | <strong>Expires:</strong> {{ ssl_info.expires_on }}</p>
+                <h3 style="color: #fff; margin-bottom: 0.75rem;">🔒 SSL/TLS Cryptographic Verification</h3>
+                <p><strong>Protocol:</strong> {{ ssl_info.protocol_version }} | <strong>Cipher Suite:</strong> {{ ssl_info.cipher }}</p>
+                <p><strong>Certificate Issuer:</strong> {{ ssl_info.issuer }} | <strong>Expires On:</strong> {{ ssl_info.expires_on }}</p>
             </div>
 
             <div class="stat-card" style="text-align: left; margin-bottom: 2rem;">
-                <h3 style="color: #fff; margin-bottom: 1rem;">📧 Email Authentication (DNS)</h3>
+                <h3 style="color: #fff; margin-bottom: 0.75rem;">📧 Email Authentication DNS Records</h3>
                 <p><strong>SPF Record:</strong> <code>{{ email_sec.spf_record }}</code></p>
                 <p><strong>DMARC Record:</strong> <code>{{ email_sec.dmarc_record }}</code></p>
             </div>
@@ -211,7 +214,58 @@
             </table>
         </div>
 
-        <!-- TAB 3: REMEDIATION VIEW -->
+        <!-- TAB 3: COMPLIANCE VIEW -->
+        <div id="tab-compliance" class="hidden">
+            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">📜 Regulatory Compliance & Standard Readiness</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Standard / Regulatory Framework</th>
+                        <th>Readiness Score</th>
+                        <th>Compliance Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fw_key, fw in compliance.frameworks.items() %}
+                    <tr>
+                        <td><strong>{{ fw_key }}</strong><br><span style="color: var(--text-dim); font-size: 0.8rem;">{{ fw.name }}</span></td>
+                        <td><strong style="color: var(--cyan);">{{ fw.readiness_percentage }}%</strong></td>
+                        <td>
+                            <span class="badge badge-{{ 'LOW' if fw.status == 'COMPLIANT' else ('HIGH' if fw.status == 'PARTIALLY COMPLIANT' else 'CRITICAL') }}">
+                                {{ fw.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB 4: ROADMAP VIEW -->
+        <div id="tab-roadmap" class="hidden">
+            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">🗺️ CISO 30-Day Remediation Roadmap</h2>
+            
+            <div class="finding-card severity-CRITICAL">
+                <h3 style="color: #fff; margin-bottom: 0.5rem;">🚨 Phase 1: Immediate Triage (First 24 Hours)</h3>
+                <p>• Block public web access to any exposed config or backup files (<code>.env</code>, <code>.git</code>).</p>
+                <p>• Enforce HTTPS and deploy the <code>Strict-Transport-Security</code> (HSTS) header to prevent traffic interception.</p>
+            </div>
+
+            <div class="finding-card severity-HIGH">
+                <h3 style="color: #fff; margin-bottom: 0.5rem;">⚡ Phase 2: Vulnerability Mitigation (Days 2 to 7)</h3>
+                <p>• Deploy strict DMARC record (<code>p=quarantine</code> or <code>p=reject</code>) to halt email spoofing.</p>
+                <p>• Configure <code>Content-Security-Policy</code> (CSP) and <code>X-Frame-Options</code> to block XSS and Clickjacking.</p>
+            </div>
+
+            <div class="finding-card severity-LOW">
+                <h3 style="color: #fff; margin-bottom: 0.5rem;">🛡️ Phase 3: Compliance & Architecture Hardening (Days 8 to 30)</h3>
+                <p>• Audit and attach <code>HttpOnly</code> and <code>SameSite</code> flags to all session cookies.</p>
+                <p>• Implement automated CI/CD security regression testing with <strong>AegisWeb</strong>.</p>
+            </div>
+        </div>
+
+        <!-- TAB 5: REMEDIATION VIEW -->
         <div id="tab-remediation" class="hidden">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">🛠️ Auto-Generated Remediation Code Snippets</h2>
             
@@ -220,23 +274,22 @@
 
             <h3 style="color: #fff; margin-top: 1.5rem;">2. Apache / `.htaccess` Directive</h3>
             <pre><code>{{ apache_patch }}</code></pre>
+
+            <h3 style="color: #fff; margin-top: 1.5rem;">3. Caddy Web Server Directive (`Caddyfile`)</h3>
+            <pre><code>{{ caddy_patch }}</code></pre>
         </div>
 
         <footer style="text-align: center; margin-top: 3rem; color: var(--text-dim); font-size: 0.85rem;">
-            Generated by <strong>AegisWeb</strong> v1.0.0 | Developed by <a href="https://github.com/Saura0S" target="_blank" style="color: var(--cyan);">@Saura0S</a>
+            Generated by <strong>AegisWeb Enterprise</strong> v1.0.0 | Lead Security Architect: <a href="https://github.com/Saura0S" target="_blank" style="color: var(--cyan);">@Saura0S</a>
         </footer>
     </div>
 
     <script>
         function switchTab(tabId) {
-            document.getElementById('tab-executive').classList.add('hidden');
-            document.getElementById('tab-technical').classList.add('hidden');
-            document.getElementById('tab-remediation').classList.add('hidden');
-
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + tabId).classList.remove('hidden');
 
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
         }
     </script>

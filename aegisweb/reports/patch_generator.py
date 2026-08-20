@@ -1,6 +1,6 @@
 """
 Automated Patch & Configuration Code Generator Module
-Synthesizes ready-to-paste configuration fixes for Nginx, Apache, and .htaccess.
+Synthesizes ready-to-paste configuration fixes for Nginx, Apache, Caddy, and Cloudflare.
 """
 
 from typing import List, Dict, Any
@@ -43,4 +43,23 @@ class PatchGenerator:
         lines.append("</IfModule>")
         lines.append("ServerSignature Off")
         lines.append("ServerTokens Prod")
+        return "\n".join(lines)
+
+    def generate_caddy_config(self, missing_headers: List[Dict[str, Any]]) -> str:
+        """Generate Caddyfile configuration snippet."""
+        lines = [
+            "# ====================================================================",
+            "# AegisWeb Auto-Generated Security Configuration for Caddy (Caddyfile)",
+            "# ====================================================================",
+            "header {"
+        ]
+        for h in missing_headers:
+            if "recommendation" in h and ":" in h["recommendation"]:
+                key_val = h["recommendation"].split(":", 1)
+                k = key_val[0].strip()
+                v = key_val[1].strip()
+                lines.append(f'    {k} "{v}"')
+        lines.append("    -Server")
+        lines.append("    -X-Powered-By")
+        lines.append("}")
         return "\n".join(lines)

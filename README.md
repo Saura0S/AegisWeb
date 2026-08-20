@@ -14,6 +14,7 @@
     <img src="https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.8+" />
     <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License" />
     <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20macOS-blue?style=for-the-badge&logo=linux&logoColor=white" alt="Platform" />
+    <img src="https://img.shields.io/badge/Compliance-PCI--DSS%20%7C%20ISO%2027001%20%7C%20NIST-purple?style=for-the-badge" alt="Compliance" />
     <img src="https://img.shields.io/badge/Author-@Saura0S-00f2fe?style=for-the-badge&logo=github&logoColor=black" alt="Author" />
   </p>
 
@@ -23,24 +24,27 @@
 
 ## ⚡ Overview
 
-**AegisWeb** is an automated, non-intrusive web security posture auditor and vulnerability assessment suite. It bridges the gap between technical security engineering and executive decision-making through its unique **Dual-Audience Reporting Core**:
+**AegisWeb** is an automated, non-intrusive web security posture auditor, vulnerability assessment platform, and compliance framework. Engineered with the perspective of seasoned CISOs and Senior Security Architects, it bridges the gap between technical security engineering and executive decision-making:
 
-1. 👔 **Executive / Business Risk Report**: Translates technical flaws into plain English explaining **"What is this issue?"**, **"Why is this dangerous for your website?"**, and **"How to fix it?"**.
-2. 💻 **Technical Security Engineering Report**: Provides raw HTTP evidence, OWASP Top 10 / CWE tags, SSL cipher verification, and ready-to-paste **Nginx** & **Apache** configuration fixes.
+1. 👔 **Executive / Business Risk Report**: Translates technical flaws into plain English explaining **"What is this issue?"**, **"Why is this dangerous for your website?"**, and **"How to fix it in simple steps?"**.
+2. 💻 **Technical Security Engineering Report**: Provides raw HTTP evidence, OWASP Top 10 & CWE tags, SSL cipher verification, and ready-to-paste **Nginx**, **Apache**, and **Caddy** configuration fixes.
+3. 📜 **Regulatory Compliance Matrix**: Maps every vulnerability directly against **PCI-DSS v4.0**, **ISO/IEC 27001:2022**, **NIST SP 800-53 Rev. 5**, **HIPAA**, and **GDPR Article 32**.
+4. 🗺️ **CISO 30-Day Remediation Roadmap**: Actionable, phased triage timeline (24-hour critical fixes $\rightarrow$ 7-day vulnerability mitigations $\rightarrow$ 30-day architectural hardening).
 
 ---
 
 ## 🌟 Key Capabilities
 
-* 🔒 **SSL/TLS Cryptographic Audit**: Evaluates certificate validity, days until expiration, and insecure deprecated protocols.
+* 🔒 **SSL/TLS Cryptographic Audit**: Evaluates certificate validity, days until expiration, and deprecated protocols.
 * 🛡️ **Defensive Security Headers & CORS**: Audits HSTS, CSP, X-Frame-Options (Clickjacking defense), MIME sniffing, Referrer-Policy, and wildcard CORS credentials.
 * 🍪 **Cookie & Session Security**: Inspects `Set-Cookie` attributes for `Secure`, `HttpOnly`, and `SameSite` flags.
-* 📁 **Sensitive File Exposure Detector**: Non-intrusively tests for publicly exposed `/.env`, `/.git/HEAD`, `/backup.sql`, `/phpinfo.php`, and swagger documentation.
-* 📧 **Email Spoofing Defense**: Validates **SPF** and **DMARC** DNS records to check if cybercriminals can spoof emails from your domain.
+* 📁 **Sensitive File Exposure Detector**: Non-intrusively tests for publicly exposed `/.env`, `/.git/HEAD`, `/backup.sql`, `/phpinfo.php`, and API schemas.
+* 📧 **Email Spoofing Defense**: Validates **SPF** and **DMARC** DNS records to prevent business email compromise and phishing spoofing.
 * 🎯 **Subdomain Takeover Detector**: Detects dangling CNAME records pointing to abandoned cloud infrastructure (AWS S3, GitHub Pages, Heroku, Azure).
 * 🕷️ **Internal Route & Auth Portal Crawler**: Discovers login portals, admin interfaces, and API routes.
-* 🛠️ **Auto-Patch Code Generator**: Synthesizes ready-to-paste configuration blocks for Nginx, Apache, and `.htaccess`.
-* 📄 **Interactive SPA HTML Report**: Features live tabs (Executive vs Technical) and a one-click **Print / Save as PDF** engine.
+* 💾 **Interactive Post-Scan Export Wizard**: Prompts the user with save options (Executive HTML, Plain-English MD, Technical JSON, Server Patches).
+* 🛠️ **Auto-Patch Code Generator**: Synthesizes ready-to-paste configuration blocks for Nginx, Apache (`.htaccess`), and Caddy.
+* 📄 **Interactive SPA HTML Report**: Features live tabs (Executive, Technical, Compliance, Roadmap, Patches) and a one-click **Print / Save as PDF** engine.
 
 ---
 
@@ -59,7 +63,9 @@ flowchart TD
     Scanner --> Reports[Dual-Report Synthesis Core]
     Reports --> Exec[👔 Plain-English Executive Brief]
     Reports --> Tech[💻 Technical OWASP/CWE Audit]
-    Reports --> Patch[🛠️ Nginx/Apache Patch Generator]
+    Reports --> Comp[📜 PCI-DSS, ISO 27001, NIST, HIPAA Mapping]
+    Reports --> Road[🗺️ CISO 30-Day Remediation Roadmap]
+    Reports --> Patch[🛠️ Nginx/Apache/Caddy Patch Generator]
     Reports --> HTML[📄 Interactive SPA HTML + PDF Print]
 ```
 
@@ -83,17 +89,17 @@ pip install -e .
 
 ## 🚀 Usage Guide
 
-### Basic Web Security Audit
+### Interactive Mode (Launches Post-Scan Export Wizard)
 ```bash
 python -m aegisweb.cli -u example.com
 ```
 
-### Full Audit Generating All Reports (HTML, Plain-English MD & JSON)
+### Full Automated Batch Audit (Exports All Formats Simultaneously)
 ```bash
-python -m aegisweb.cli -u example.com --all-reports -o my_scan
+python -m aegisweb.cli -u example.com --all-reports -o audit_output
 ```
 
-### Audit with Internal Route Discovery & Authentication Crawler
+### Audit with Internal Route Discovery & Crawler
 ```bash
 python -m aegisweb.cli -u example.com --crawl --all-reports
 ```

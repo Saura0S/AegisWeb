@@ -28,6 +28,7 @@ from aegisweb.scanner.exposure_checker import ExposureChecker
 from aegisweb.scanner.takeover_detector import TakeoverDetector
 from aegisweb.scanner.crawler import LightweightCrawler
 from aegisweb.reports.plain_english import PlainEnglishTranslator
+from aegisweb.reports.compliance import ComplianceAuditor
 from aegisweb.reports.patch_generator import PatchGenerator
 from aegisweb.reports.generator import ReportGenerator
 
@@ -166,10 +167,16 @@ def main():
     translator = PlainEnglishTranslator()
     executive_findings = translator.generate_executive_brief(all_findings)
 
-    # 8. Patch Generation
+    # 8. Regulatory Compliance Assessment
+    compliance_auditor = ComplianceAuditor()
+    compliance_data = compliance_auditor.evaluate_compliance(all_findings)
+
+    # 9. Patch Generation (Nginx, Apache, Caddy)
     patch_gen = PatchGenerator()
-    nginx_patch = patch_gen.generate_nginx_config(headers_audit.get("missing_headers", []))
-    apache_patch = patch_gen.generate_apache_config(headers_audit.get("missing_headers", []))
+    missing_hdrs = headers_audit.get("missing_headers", [])
+    nginx_patch = patch_gen.generate_nginx_config(missing_hdrs)
+    apache_patch = patch_gen.generate_apache_config(missing_hdrs)
+    caddy_patch = patch_gen.generate_caddy_config(missing_hdrs)
 
     # Overall Scoring
     total_deductions = sum(25 if f.get("severity") == "CRITICAL" else (15 if f.get("severity") == "HIGH" else (8 if f.get("severity") == "MEDIUM" else 3)) for f in all_findings)
@@ -189,26 +196,34 @@ def main():
         "exposed_files": exposure_results.get("exposed_files", []),
         "crawl_data": crawl_data,
         "executive_findings": executive_findings,
+        "compliance": compliance_data,
         "all_findings": all_findings,
         "nginx_patch": nginx_patch,
-        "apache_patch": apache_patch
+        "apache_patch": apache_patch,
+        "caddy_patch": caddy_patch
     }
 
     # Render Terminal Output
     generator = ReportGenerator(report_payload)
     generator.print_terminal_dashboard()
 
-    # Handle Exports
+    # Determine Export Action
     prefix = args.output or f"aegisweb_{domain.replace('.', '_')}"
-    
-    if args.all_reports or args.html or (not args.plain and not args.json and not args.output):
-        generator.export_html(f"{prefix}.html")
+    has_explicit_export = args.all_reports or args.html or args.plain or args.json
 
-    if args.all_reports or args.plain:
-        generator.export_plain_text(f"{prefix}_executive_summary.md")
-
-    if args.all_reports or args.json:
-        generator.export_json(f"{prefix}.json")
+    if has_explicit_export:
+        if args.all_reports:
+            generator.export_all(prefix)
+        else:
+            if args.html:
+                generator.export_html(f"{prefix}.html")
+            if args.plain:
+                generator.export_plain_text(f"{prefix}_executive_summary.md")
+            if args.json:
+                generator.export_json(f"{prefix}.json")
+    else:
+        # Launch Interactive Save Menu
+        generator.interactive_export_menu(prefix)
 
     if console:
         console.print(f"\n[bold green]✔[/] AegisWeb Audit Completed in [cyan]{report_payload['scan_time_seconds']}s[/]!\n")
