@@ -31,6 +31,7 @@ from aegisweb.scanner.secret_scanner import SecretScanner
 from aegisweb.scanner.admin_checker import AdminAuditor
 from aegisweb.reports.plain_english import PlainEnglishTranslator
 from aegisweb.reports.compliance import ComplianceAuditor
+from aegisweb.reports.owasp_matrix import OWASPAuditor
 from aegisweb.reports.patch_generator import PatchGenerator
 from aegisweb.reports.generator import ReportGenerator
 
@@ -201,7 +202,11 @@ def main():
     compliance_auditor = ComplianceAuditor()
     compliance_data = compliance_auditor.evaluate_compliance(all_findings)
 
-    # 11. Patch Generation (Nginx, Apache, Caddy)
+    # 11. OWASP Top 10 (2021) Assessment
+    owasp_auditor = OWASPAuditor()
+    owasp_results = owasp_auditor.audit(all_findings)
+
+    # 12. Patch Generation (Nginx, Apache, Caddy)
     patch_gen = PatchGenerator()
     missing_hdrs = headers_audit.get("missing_headers", [])
     nginx_patch = patch_gen.generate_nginx_config(missing_hdrs)
@@ -229,6 +234,7 @@ def main():
         "crawl_data": crawl_data,
         "executive_findings": executive_findings,
         "compliance": compliance_data,
+        "owasp": owasp_results,
         "all_findings": all_findings,
         "nginx_patch": nginx_patch,
         "apache_patch": apache_patch,

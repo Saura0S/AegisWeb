@@ -165,6 +165,7 @@
         <div class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('executive')">👔 Executive Plain-English</button>
             <button class="tab-btn" onclick="switchTab('technical')">💻 Technical & OWASP Deep-Dive</button>
+            <button class="tab-btn" onclick="switchTab('owasp')">🏆 OWASP Top 10</button>
             <button class="tab-btn" onclick="switchTab('compliance')">📜 Regulatory Compliance</button>
             <button class="tab-btn" onclick="switchTab('roadmap')">🗺️ CISO 30-Day Roadmap</button>
             <button class="tab-btn" onclick="switchTab('remediation')">🛠️ Patch Studio</button>
@@ -272,7 +273,60 @@
             </table>
         </div>
 
-        <!-- TAB 3: COMPLIANCE VIEW -->
+        <!-- TAB 3: OWASP TOP 10 VIEW -->
+        <div id="tab-owasp" class="tab-content hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="color: var(--cyan); margin-bottom: 0.25rem;">🏆 OWASP Top 10 (2021) Compliance Checklist</h2>
+                    <p style="color: var(--text-dim); font-size: 0.9rem;">Global Industry Standard for Web Application Security</p>
+                </div>
+                <div style="background: rgba(0,242,254,0.1); border: 1px solid var(--cyan); padding: 0.5rem 1.25rem; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.6rem; font-weight: 800; color: var(--cyan);">{{ owasp.owasp_compliance_score }}%</div>
+                    <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700;">OWASP Readiness</div>
+                </div>
+            </div>
+
+            {% for cat_id, cat in owasp.categories.items() %}
+            <div class="finding-card severity-{{ 'LOW' if cat.status == 'PASS' else 'HIGH' }}">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span style="color: var(--cyan);">{{ cat_id }}</span>: {{ cat.title }}
+                    </div>
+                    <span class="badge badge-{{ 'LOW' if cat.status == 'PASS' else 'CRITICAL' }}">
+                        {{ '✔ PASSED' if cat.status == 'PASS' else '✖ FAILED' }}
+                    </span>
+                </div>
+                <div class="qa-block">
+                    <div class="qa-title">📖 Category Definition:</div>
+                    <div class="qa-desc">{{ cat.description }}</div>
+                </div>
+                <div class="qa-block">
+                    <div class="qa-title">⚠️ Risk & Technical Impact:</div>
+                    <div class="qa-desc">{{ cat.impact }}</div>
+                </div>
+                {% if cat.violations_count > 0 %}
+                <div class="nav-box" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.08);">
+                    <div class="nav-title" style="color: var(--red);">🚨 Triggered Findings in Audit ({{ cat.violations_count }}):</div>
+                    <div class="nav-path" style="color: #fca5a5;">
+                        {% for v in cat.violations %}
+                        • {{ v.title }}<br>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="qa-block">
+                    <div class="qa-title" style="color: var(--green);">💡 OWASP Hardening Guidance:</div>
+                    <div class="qa-desc">{{ cat.remediation }}</div>
+                </div>
+                {% else %}
+                <div class="qa-block" style="color: var(--green); font-size: 0.9rem; font-weight: 600; padding: 0.5rem 0;">
+                    ✓ No active vulnerabilities detected in this category. Compliant with OWASP Top 10 baseline.
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- TAB 4: COMPLIANCE VIEW -->
         <div id="tab-compliance" class="tab-content hidden">
             <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">📜 Regulatory Compliance & Standard Readiness</h2>
             

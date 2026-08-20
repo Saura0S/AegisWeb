@@ -43,6 +43,7 @@ class ReportGenerator:
         score = self.data.get("score_percentage", 0)
         grade_color = "green" if grade in ["A+", "A"] else ("yellow" if grade in ["B", "C"] else "red")
         compliance_score = self.data.get("compliance", {}).get("overall_governance_score", 0)
+        owasp_score = self.data.get("owasp", {}).get("owasp_compliance_score", 0)
 
         vulnerability_pct = max(0, min(100, 100 - score))
         if vulnerability_pct == 0:
@@ -68,6 +69,7 @@ class ReportGenerator:
             f"[bold white]SSL/TLS Status:[/] [green]{self.data.get('ssl_info', {}).get('protocol_version')}[/] (Expires in {self.data.get('ssl_info', {}).get('days_remaining')} days)\n"
             f"[bold white]Email Spoofing Defense:[/] [cyan]{self.data.get('email_sec', {}).get('dmarc_strength')}[/]\n"
             f"[bold white]Compliance Readiness:[/] [bold purple]{compliance_score}%[/] (PCI-DSS, ISO 27001, NIST, HIPAA)\n"
+            f"[bold white]OWASP Top 10 (2021):[/] [bold blue]{owasp_score}%[/] ({self.data.get('owasp', {}).get('status', 'EVALUATED')})\n"
             f"[bold white]Public Secrets / Leaked Keys:[/] [bold {'red' if self.data.get('secret_results', {}).get('total_secrets_found', 0) > 0 else 'green'}]{self.data.get('secret_results', {}).get('total_secrets_found', 0)}[/]"
         )
         self.console.print(Panel(summary_text, title="[bold cyan]🛡️ AegisWeb Enterprise Security Summary[/]", border_style="cyan"))
@@ -231,6 +233,7 @@ class ReportGenerator:
             "email_sec": self.data.get("email_sec", {}),
             "headers_audit": self.data.get("headers_audit", {}),
             "compliance": self.data.get("compliance", {}),
+            "owasp": self.data.get("owasp", {}),
             "secrets": self.data.get("secret_results", {}).get("leaks", []),
             "admin_portals": self.data.get("admin_portals", []),
             "exposed_files_count": len(self.data.get("exposed_files", [])),
@@ -298,6 +301,19 @@ class ReportGenerator:
             if item.get("exact_code"):
                 lines.append(f"- **🛠️ Exact Code to Apply:**\n```\n{item['exact_code']}\n```")
             lines.append(f"- **💼 Business Impact:** {item['business_impact']}\n")
+
+        lines.append("## 🏆 OWASP Top 10 (2021) Standard Compliance Checklist")
+        owasp_data = self.data.get("owasp", {})
+        lines.append(f"OWASP Top 10 Posture Score: **{owasp_data.get('owasp_compliance_score', 0)}%** ({owasp_data.get('status', 'EVALUATED')})\n")
+        
+        for cat_id, cat in owasp_data.get("categories", {}).items():
+            status_icon = "✔ PASS" if cat["status"] == "PASS" else "✖ FAIL"
+            lines.append(f"- **[{status_icon}] {cat_id}: {cat['title']}**")
+            lines.append(f"  - *Overview:* {cat['description']}")
+            if cat["violations_count"] > 0:
+                lines.append(f"  - *Violations Detected ({cat['violations_count']}):* " + ", ".join([v["title"] for v in cat["violations"]]))
+                lines.append(f"  - *Remediation Action:* {cat['remediation']}")
+            lines.append("")
 
         lines.append("## 🗺️ CISO 30-Day Phased Remediation Roadmap")
         lines.append("1. **Phase 1 (First 24 Hours)**: Enforce HTTPS & HSTS, revoke any leaked API keys, and block public access to `.env`/`.git`.")
