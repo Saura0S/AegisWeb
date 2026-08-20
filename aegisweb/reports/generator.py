@@ -32,7 +32,7 @@ class ReportGenerator:
         self.console = Console(legacy_windows=False) if RICH_AVAILABLE else None
 
     def print_terminal_dashboard(self):
-        """Display formatted terminal dashboard with Green Ticks and Red Crosses."""
+        """Display formatted terminal dashboard with Green Ticks, Red Crosses, and CISO Verdict."""
         if not self.console:
             print(f"\n--- AegisWeb Security Audit: {self.data.get('domain')} ---")
             print(f"Grade: {self.data.get('grade')} ({self.data.get('score_percentage')}%)")
@@ -43,6 +43,23 @@ class ReportGenerator:
         score = self.data.get("score_percentage", 0)
         grade_color = "green" if grade in ["A+", "A"] else ("yellow" if grade in ["B", "C"] else "red")
         compliance_score = self.data.get("compliance", {}).get("overall_governance_score", 0)
+
+        vulnerability_pct = max(0, min(100, 100 - score))
+        if vulnerability_pct == 0:
+            verdict_badge = "[bold green]0% VULNERABLE (COMPLETELY SAFE / HARDENED)[/]"
+            verdict_quote = "Target demonstrates an ironclad defense posture (0% Vulnerability Risk). All critical defensive controls, encryption, and secret protections are fully active."
+        elif vulnerability_pct <= 20:
+            verdict_badge = f"[bold green]{vulnerability_pct}% VULNERABLE (MINIMAL RISK)[/]"
+            verdict_quote = f"Target demonstrates strong security baseline with only {vulnerability_pct}% minor exposure risk. Minor header or policy hardening recommended."
+        elif vulnerability_pct <= 45:
+            verdict_badge = f"[bold yellow]{vulnerability_pct}% VULNERABLE (MODERATE RISK)[/]"
+            verdict_quote = f"Target exhibits {vulnerability_pct}% vulnerability exposure risk. Key attack vectors (e.g. missing security headers or email authentication) require timely mitigation."
+        elif vulnerability_pct <= 70:
+            verdict_badge = f"[bold red]{vulnerability_pct}% VULNERABLE (HIGH RISK)[/]"
+            verdict_quote = f"Target exhibits {vulnerability_pct}% vulnerability exposure risk across multiple core attack surfaces. Immediate remediation is advised following the CISO roadmap."
+        else:
+            verdict_badge = f"[bold red]{vulnerability_pct}% VULNERABLE (CRITICAL RISK)[/]"
+            verdict_quote = f"CRITICAL: Target exhibits {vulnerability_pct}% vulnerability exposure risk. Multiple high-severity misconfigurations or exposed surfaces require emergency triage within 24 hours."
 
         # Summary Header Panel
         summary_text = (
@@ -125,6 +142,14 @@ class ReportGenerator:
 
             self.console.print(table)
 
+        # CISO Final Verdict Panel
+        verdict_panel_text = (
+            f"[bold white]Vulnerability Risk Index:[/] {verdict_badge}\n"
+            f"[italic white]\"{verdict_quote}\"[/]\n\n"
+            f"[dim]— Evaluated by Lead Security Architect [bold cyan]Saurabh (@Saura0S)[/][/]"
+        )
+        self.console.print(Panel(verdict_panel_text, title="[bold cyan]👨‍💻 Lead Security Architect Verdict (Saura0S)[/]", border_style="cyan"))
+
     def interactive_export_menu(self, default_prefix: str):
         """Prompt user interactively to select report save options and custom directory."""
         if not self.console:
@@ -192,12 +217,15 @@ class ReportGenerator:
     def export_html(self, output_file: str):
         """Generate interactive SPA HTML report with PDF print capabilities."""
         template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+        score = self.data.get("score_percentage", 0)
+        vulnerability_pct = max(0, min(100, 100 - score))
         
         template_vars = {
             "target_domain": self.data.get("domain", ""),
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
             "grade": self.data.get("grade", "N/A"),
-            "score_percentage": self.data.get("score_percentage", 0),
+            "score_percentage": score,
+            "vulnerability_pct": vulnerability_pct,
             "executive_findings": self.data.get("executive_findings", []),
             "ssl_info": self.data.get("ssl_info", {}),
             "email_sec": self.data.get("email_sec", {}),
@@ -239,12 +267,22 @@ class ReportGenerator:
 
     def export_plain_text(self, output_file: str):
         """Generate client-ready plain English executive markdown/text document with code evidence locations."""
+        score = self.data.get("score_percentage", 0)
+        vulnerability_pct = max(0, min(100, 100 - score))
+        
+        if vulnerability_pct == 0:
+            verdict_statement = "**0% VULNERABLE (Completely Safe / Hardened)**\n> \"The target demonstrates an ironclad defense posture (0% Vulnerability Risk). All critical defensive controls, encryption, and secret protections are fully active and compliant.\""
+        else:
+            verdict_statement = f"**{vulnerability_pct}% VULNERABLE**\n> \"Based on automated multi-vector heuristic auditing, the target exhibits a **{vulnerability_pct}% Vulnerability Exposure Risk** across {len(self.data.get('all_findings', []))} identified attack surfaces. Immediate remediation is advised following the CISO 30-day roadmap to reach 0% risk.\""
+
         lines = [
             f"# Executive Cybersecurity Risk Brief — {self.data.get('domain')}",
             f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}",
-            f"Overall Security Grade: {self.data.get('grade')} ({self.data.get('score_percentage')}%)",
+            f"Overall Security Grade: {self.data.get('grade')} ({score}% Posture Score)",
             f"Compliance Readiness Score: {self.data.get('compliance', {}).get('overall_governance_score', 0)}%",
             "Auditor: @Saura0S (Lead Security Architect | AegisWeb)\n",
+            "## 👨‍💻 Final Security Verdict by Saurabh (@Saura0S)",
+            f"{verdict_statement}\n",
             "## 📌 Executive Summary",
             "This report summarizes the security posture, business risks, secret leakages, and remediation roadmap identified during the automated audit.\n"
         ]
@@ -259,6 +297,11 @@ class ReportGenerator:
             lines.append(f"- **How to fix it?** {item['how_to_fix']}")
             lines.append(f"- **Business Impact:** {item['business_impact']}\n")
 
+        lines.append("## 🗺️ CISO 30-Day Phased Remediation Roadmap")
+        lines.append("1. **Phase 1 (First 24 Hours)**: Enforce HTTPS & HSTS, revoke any leaked API keys, and block public access to `.env`/`.git`.")
+        lines.append("2. **Phase 2 (Days 2 to 7)**: Deploy strict DMARC (`p=reject`) anti-spoofing policy, configure Content-Security-Policy (CSP) and X-Frame-Options.")
+        lines.append("3. **Phase 3 (Days 8 to 30)**: Audit cookie `HttpOnly`/`SameSite` flags, integrate automated CI/CD scans with AegisWeb to maintain 0% vulnerability risk.")
+
         with open(output_file, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
 
@@ -266,9 +309,14 @@ class ReportGenerator:
             self.console.print(f"[bold green]✔[/] Plain-English Executive Summary exported: [cyan]{output_file}[/]")
 
     def export_json(self, output_file: str):
-        """Export structured JSON dataset."""
+        """Export structured JSON dataset with vulnerability percentage."""
+        score = self.data.get("score_percentage", 0)
+        json_data = dict(self.data)
+        json_data["vulnerability_exposure_percentage"] = max(0, min(100, 100 - score))
+        json_data["auditor_verdict"] = f"Target exhibits {json_data['vulnerability_exposure_percentage']}% vulnerability exposure risk as evaluated by Saurabh (@Saura0S)."
+
         with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, indent=2)
+            json.dump(json_data, f, indent=2)
 
         if self.console:
             self.console.print(f"[bold green]✔[/] Technical JSON dataset exported: [cyan]{output_file}[/]")

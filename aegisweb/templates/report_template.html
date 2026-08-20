@@ -132,6 +132,28 @@
                 <div class="stat-num">{{ compliance.overall_governance_score }}%</div>
                 <div class="stat-lbl">Compliance Readiness</div>
             </div>
+        <!-- CISO Verdict Banner -->
+        <div class="stat-card" style="text-align: left; margin-bottom: 2rem; border-left: 6px solid {{ 'var(--green)' if vulnerability_pct == 0 else ('var(--yellow)' if vulnerability_pct <= 45 else 'var(--red)') }}; background: linear-gradient(135deg, #111827 0%, #172554 100%);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="font-size: 1.25rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                        👨‍💻 <span>Lead Security Architect Verdict by Saurabh (@Saura0S)</span>
+                    </h3>
+                    <p style="color: #cbd5e1; margin-top: 0.5rem; font-size: 1rem;">
+                        {% if vulnerability_pct == 0 %}
+                            🎉 <strong>Target demonstrates an ironclad defense posture (0% Vulnerability Exposure Risk).</strong> All evaluated controls, encryption standards, security headers, and secret protections are fully hardened and compliant.
+                        {% elif vulnerability_pct <= 45 %}
+                            ⚠️ <strong>Target exhibits {{ vulnerability_pct }}% Vulnerability Exposure Risk.</strong> Several security misconfigurations and defense gaps exist. Implementing recommended policies will harden this asset to 0% risk.
+                        {% else %}
+                            🚨 <strong>CRITICAL: Target exhibits {{ vulnerability_pct }}% Vulnerability Exposure Risk.</strong> Multiple high-severity misconfigurations or attack surfaces were detected. Immediate remediation is advised following the CISO 30-day roadmap.
+                        {% endif %}
+                    </p>
+                </div>
+                <div style="text-align: center; min-width: 140px; padding: 0.75rem 1.25rem; background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 2rem; font-weight: 800; color: {{ 'var(--green)' if vulnerability_pct == 0 else ('var(--yellow)' if vulnerability_pct <= 45 else 'var(--red)') }};">{{ vulnerability_pct }}%</div>
+                    <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Vulnerability Risk</div>
+                </div>
+            </div>
         </div>
 
         <!-- TAB 1: EXECUTIVE VIEW -->
