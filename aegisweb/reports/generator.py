@@ -291,11 +291,13 @@ class ReportGenerator:
             lines.append(f"### {idx}. [{item['severity']} Priority] {item['title']}")
             lines.append(f"- **What is this issue?** {item['what_is_it']}")
             lines.append(f"- **Why is this dangerous for your website?** {item['why_dangerous']}")
-            lines.append(f"- **Where was this found?** `{item.get('source_location', 'Web Server / Headers')}`")
+            lines.append(f"- **📁 Exact File / Config Location Path:** `{item.get('file_navigation', item.get('source_location', 'Web Server / Headers'))}`")
             if item.get("code_snippet"):
-                lines.append(f"- **Code Evidence Snippet:** `{item['code_snippet']}`")
-            lines.append(f"- **How to fix it?** {item['how_to_fix']}")
-            lines.append(f"- **Business Impact:** {item['business_impact']}\n")
+                lines.append(f"- **🔍 Code Evidence Snippet:** `{item['code_snippet']}`")
+            lines.append(f"- **💡 How to fix it?** {item['how_to_fix']}")
+            if item.get("exact_code"):
+                lines.append(f"- **🛠️ Exact Code to Apply:**\n```\n{item['exact_code']}\n```")
+            lines.append(f"- **💼 Business Impact:** {item['business_impact']}\n")
 
         lines.append("## 🗺️ CISO 30-Day Phased Remediation Roadmap")
         lines.append("1. **Phase 1 (First 24 Hours)**: Enforce HTTPS & HSTS, revoke any leaked API keys, and block public access to `.env`/`.git`.")

@@ -76,6 +76,10 @@
         .qa-title { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.4rem; }
         .qa-desc { font-size: 0.95rem; color: #e5e7eb; }
 
+        .nav-box { background: rgba(0, 242, 254, 0.06); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid rgba(0, 242, 254, 0.25); margin: 0.85rem 0; }
+        .nav-title { font-size: 0.85rem; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-path { font-size: 0.95rem; font-weight: 600; color: #a5f3fc; margin-top: 0.3rem; font-family: monospace; word-break: break-all; }
+
         /* Code Blocks */
         pre { background: #050811; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; overflow-x: auto; color: #a5f3fc; font-family: 'Courier New', Courier, monospace; font-size: 0.9rem; margin-top: 0.75rem; }
 
@@ -88,10 +92,10 @@
 
         @media print {
             body { background: #fff; color: #000; padding: 0; }
-            header, .stat-card, .finding-card, table, pre, .verdict-card { border-color: #ccc !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
+            header, .stat-card, .finding-card, table, pre, .verdict-card, .nav-box { border-color: #ccc !important; background: #fff !important; color: #000 !important; box-shadow: none !important; }
             .btn-print, .tab-bar { display: none !important; }
-            .card-title, .qa-title, h1, h2, .verdict-title { color: #000 !important; }
-            .qa-desc, td, th, .verdict-body { color: #333 !important; }
+            .card-title, .qa-title, h1, h2, .verdict-title, .nav-title { color: #000 !important; }
+            .qa-desc, td, th, .verdict-body, .nav-path { color: #333 !important; }
             .hidden { display: block !important; }
         }
     </style>
@@ -168,7 +172,7 @@
 
         <!-- TAB 1: EXECUTIVE VIEW -->
         <div id="tab-executive" class="tab-content">
-            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">👔 Executive Plain-English Risk Brief</h2>
+            <h2 style="color: var(--cyan); margin-bottom: 1.25rem;">👔 Executive Plain-English Risk Brief & Exact Code Locations</h2>
             {% for item in executive_findings %}
             <div class="finding-card severity-{{ item.severity }}">
                 <div class="card-header">
@@ -183,21 +187,33 @@
                     <div class="qa-title">⚠️ Why is this dangerous for your website?</div>
                     <div class="qa-desc">{{ item.why_dangerous }}</div>
                 </div>
-                <div class="qa-block">
-                    <div class="qa-title">📍 Where was this found?</div>
-                    <div class="qa-desc"><code>{{ item.source_location }}</code></div>
+
+                <!-- Exact File/Folder/DNS Location Blueprint -->
+                <div class="nav-box">
+                    <div class="nav-title">📁 Exact File / Folder / Config Location Path:</div>
+                    <div class="nav-path">{{ item.file_navigation }}</div>
                 </div>
+
                 {% if item.code_snippet %}
                 <div class="qa-block">
-                    <div class="qa-title">🔍 Code Evidence Snippet:</div>
+                    <div class="qa-title">🔍 Code Evidence Snippet in Source:</div>
                     <pre><code>{{ item.code_snippet }}</code></pre>
                 </div>
                 {% endif %}
+
                 <div class="qa-block">
                     <div class="qa-title">💡 How to fix it in simple steps?</div>
                     <div class="qa-desc">{{ item.how_to_fix }}</div>
                 </div>
-                <div class="qa-block" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border);">
+
+                {% if item.exact_code %}
+                <div class="qa-block">
+                    <div class="qa-title" style="color: var(--green);">🛠️ Exact Code to Add / Replace:</div>
+                    <pre><code>{{ item.exact_code }}</code></pre>
+                </div>
+                {% endif %}
+
+                <div class="qa-block" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">
                     <div class="qa-title" style="color: var(--purple);">💼 Business & Compliance Impact:</div>
                     <div class="qa-desc" style="color: #c4b5fd;">{{ item.business_impact }}</div>
                 </div>
@@ -291,18 +307,18 @@
             <div class="finding-card severity-CRITICAL">
                 <h3 style="color: #fff; margin-bottom: 0.5rem;">🚨 Phase 1: Immediate Triage (First 24 Hours)</h3>
                 <p>• Block public web access to any exposed config or backup files (<code>.env</code>, <code>.git</code>).</p>
-                <p>• Enforce HTTPS and deploy the <code>Strict-Transport-Security</code> (HSTS) header to prevent traffic interception.</p>
+                <p>• Enforce HTTPS and deploy the <code>Strict-Transport-Security</code> (HSTS) header in <code>/etc/nginx/sites-available/default</code>.</p>
             </div>
 
             <div class="finding-card severity-HIGH">
                 <h3 style="color: #fff; margin-bottom: 0.5rem;">⚡ Phase 2: Vulnerability Mitigation (Days 2 to 7)</h3>
-                <p>• Deploy strict DMARC record (<code>p=quarantine</code> or <code>p=reject</code>) to halt email spoofing.</p>
+                <p>• Deploy strict DMARC record (<code>p=quarantine</code> or <code>p=reject</code>) in DNS records to halt email spoofing.</p>
                 <p>• Configure <code>Content-Security-Policy</code> (CSP) and <code>X-Frame-Options</code> to block XSS and Clickjacking.</p>
             </div>
 
             <div class="finding-card severity-LOW">
                 <h3 style="color: #fff; margin-bottom: 0.5rem;">🛡️ Phase 3: Compliance & Architecture Hardening (Days 8 to 30)</h3>
-                <p>• Audit and attach <code>HttpOnly</code> and <code>SameSite</code> flags to all session cookies.</p>
+                <p>• Audit and attach <code>HttpOnly</code> and <code>SameSite</code> flags to all session cookies in backend config.</p>
                 <p>• Implement automated CI/CD security regression testing with <strong>AegisWeb</strong>.</p>
             </div>
         </div>
