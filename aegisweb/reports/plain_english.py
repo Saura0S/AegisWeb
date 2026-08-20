@@ -1,6 +1,6 @@
 """
 Plain-English Executive Risk Translator Module
-Converts complex cybersecurity findings into clear, business-focused risk narratives.
+Converts complex cybersecurity findings into clear, business-focused risk narratives with evidence locations.
 """
 
 from typing import Dict, Any, List
@@ -10,6 +10,20 @@ class PlainEnglishTranslator:
     """Translates technical vulnerabilities into non-technical executive briefs."""
 
     RISK_DICTIONARY = {
+        "Public Hardcoded Secret": {
+            "title": "Exposed Public API Key / Secret in Frontend Code",
+            "what_is_it": "A sensitive API key, access token, or cloud credential was found hardcoded inside your website's public HTML or JavaScript code.",
+            "why_dangerous": "Anyone (including automated attacker bots) can inspect your page source, steal this credential, and gain unauthorized access to your cloud services, databases, or third-party APIs.",
+            "how_to_fix": "Immediately revoke and rotate the exposed key. Move sensitive credentials to secure backend environment variables (.env) and never expose them in client-side code.",
+            "business_impact": "Critical Risk — Direct database/cloud compromise, data theft, and unexpected API billing charges."
+        },
+        "Exposed Administrative Portal": {
+            "title": "Publicly Reachable Admin Dashboard / Gateway",
+            "what_is_it": "An internal administrative login gateway or control panel is openly accessible to anyone on the internet.",
+            "why_dangerous": "Attackers can target this interface with automated brute-force attacks, credential stuffing, and authentication bypass exploits to hijack administrative privileges.",
+            "how_to_fix": "Restrict admin portal access to authorized IP addresses, enable Multi-Factor Authentication (MFA), or place the admin panel behind a corporate VPN.",
+            "business_impact": "High Risk — Complete website and database takeover if administrative credentials are compromised."
+        },
         "Strict-Transport-Security (HSTS)": {
             "title": "Missing Automatic HTTPS Protection (HSTS)",
             "what_is_it": "Your website doesn't strictly force browsers to only use encrypted HTTPS connections.",
@@ -47,9 +61,11 @@ class PlainEnglishTranslator:
         }
     }
 
-    def translate_finding(self, finding: Dict[str, Any]) -> Dict[str, str]:
-        """Convert a single finding to plain English narrative."""
+    def translate_finding(self, finding: Dict[str, Any]) -> Dict[str, Any]:
+        """Convert a single finding to plain English narrative with evidence location."""
         key = finding.get("title", finding.get("header", ""))
+        location = finding.get("source_location", "Web Server Headers / Configuration")
+        snippet = finding.get("code_snippet", "")
         
         # Check dictionary
         for k, v in self.RISK_DICTIONARY.items():
@@ -60,7 +76,9 @@ class PlainEnglishTranslator:
                     "what_is_it": v["what_is_it"],
                     "why_dangerous": v["why_dangerous"],
                     "how_to_fix": v["how_to_fix"],
-                    "business_impact": v["business_impact"]
+                    "business_impact": v["business_impact"],
+                    "source_location": location,
+                    "code_snippet": snippet
                 }
 
         # Fallback dynamic translation
@@ -70,9 +88,11 @@ class PlainEnglishTranslator:
             "what_is_it": f"A security configuration issue was detected ({finding.get('cwe', 'Best practice deviation')}).",
             "why_dangerous": "Leaves the website exposed to unintended data leaks or exploitation by automated vulnerability scanners.",
             "how_to_fix": finding.get("recommendation", "Review and apply the recommended security configuration."),
-            "business_impact": "Medium Risk — General security posture weakness."
+            "business_impact": "Medium Risk — General security posture weakness.",
+            "source_location": location,
+            "code_snippet": snippet
         }
 
-    def generate_executive_brief(self, all_findings: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+    def generate_executive_brief(self, all_findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Generate full suite of translated executive findings."""
         return [self.translate_finding(f) for f in all_findings]

@@ -27,6 +27,8 @@ from aegisweb.scanner.email_sec_auditor import EmailSecurityAuditor
 from aegisweb.scanner.exposure_checker import ExposureChecker
 from aegisweb.scanner.takeover_detector import TakeoverDetector
 from aegisweb.scanner.crawler import LightweightCrawler
+from aegisweb.scanner.secret_scanner import SecretScanner
+from aegisweb.scanner.admin_checker import AdminAuditor
 from aegisweb.reports.plain_english import PlainEnglishTranslator
 from aegisweb.reports.compliance import ComplianceAuditor
 from aegisweb.reports.patch_generator import PatchGenerator
@@ -70,9 +72,9 @@ def main():
     parser.add_argument("--html", action="store_true", help="Generate interactive SPA HTML report with PDF print support")
     parser.add_argument("--plain", action="store_true", help="Export client-ready Plain-English Executive Summary (.md)")
     parser.add_argument("--json", action="store_true", help="Export full technical JSON dataset")
-    parser.add_argument("--all-reports", action="store_true", help="Generate HTML, Plain-English, and JSON reports simultaneously")
+    parser.add_argument("--all-reports", action="store_true", help="Generate HTML, Plain-English, JSON, and Patches simultaneously")
     parser.add_argument("--crawl", action="store_true", help="Enable internal route & auth portal crawler")
-    parser.add_argument("-o", "--output", type=str, default=None, help="Custom output filename or prefix")
+    parser.add_argument("-o", "--output", type=str, default=None, help="Custom output filename prefix or directory")
     parser.add_argument("--timeout", type=int, default=6, help="Network timeout in seconds (default: 6)")
     parser.add_argument("-v", "--version", action="version", version="AegisWeb v1.0.0 (by @Saura0S)")
 
@@ -93,22 +95,24 @@ def main():
     # 1. SSL/TLS Audit
     if console:
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="[cyan]1/6 Auditing SSL/TLS encryption & certificate health...", total=None)
+            progress.add_task(description="[cyan]1/8 Auditing SSL/TLS encryption & certificate health...", total=None)
             ssl_auditor = SSLChecker(timeout=args.timeout)
             ssl_info = ssl_auditor.audit(domain)
     else:
-        print("[*] 1/6 Auditing SSL/TLS certificate...")
+        print("[*] 1/8 Auditing SSL/TLS certificate...")
         ssl_auditor = SSLChecker(timeout=args.timeout)
         ssl_info = ssl_auditor.audit(domain)
 
     all_findings.extend(ssl_info.get("findings", []))
 
-    # 2. Fetch HTTP Headers and Cookie Inspection
+    # 2. Fetch HTTP Headers, HTML body and Cookie Inspection
     headers_dict = {}
+    html_body = ""
     raw_cookies = []
     try:
         resp = requests.get(base_url, timeout=args.timeout, verify=False, allow_redirects=True)
         headers_dict = dict(resp.headers)
+        html_body = resp.text
         raw_cookies = resp.raw.headers.getlist("Set-Cookie") if hasattr(resp.raw, "headers") else []
     except Exception:
         pass
@@ -127,11 +131,11 @@ def main():
     # 4. Email Security (SPF & DMARC)
     if console:
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="[cyan]3/6 Auditing email spoofing defense (SPF/DMARC)...", total=None)
+            progress.add_task(description="[cyan]3/8 Auditing email spoofing defense (SPF/DMARC)...", total=None)
             email_auditor = EmailSecurityAuditor(timeout=args.timeout)
             email_sec = email_auditor.audit(domain)
     else:
-        print("[*] 3/6 Auditing email spoofing defense...")
+        print("[*] 3/8 Auditing email spoofing defense...")
         email_auditor = EmailSecurityAuditor(timeout=args.timeout)
         email_sec = email_auditor.audit(domain)
 
@@ -140,45 +144,71 @@ def main():
     # 5. Sensitive File Exposure Check
     if console:
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="[cyan]4/6 Scanning for publicly exposed configuration files...", total=None)
+            progress.add_task(description="[cyan]4/8 Scanning for publicly exposed configuration files...", total=None)
             exposure_checker = ExposureChecker(timeout=args.timeout)
             exposure_results = exposure_checker.audit(base_url)
     else:
-        print("[*] 4/6 Scanning for exposed sensitive files...")
+        print("[*] 4/8 Scanning for exposed sensitive files...")
         exposure_checker = ExposureChecker(timeout=args.timeout)
         exposure_results = exposure_checker.audit(base_url)
 
     all_findings.extend(exposure_results.get("findings", []))
 
-    # 6. Optional Crawler
+    # 6. Secret & Public API Key Leak Scanner
+    if console:
+        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
+            progress.add_task(description="[cyan]5/8 Inspecting HTML/JavaScript code for exposed API keys...", total=None)
+            secret_scanner = SecretScanner(timeout=args.timeout)
+            secret_results = secret_scanner.scan(base_url, html_body)
+    else:
+        print("[*] 5/8 Scanning HTML/JS for leaked API keys...")
+        secret_scanner = SecretScanner(timeout=args.timeout)
+        secret_results = secret_scanner.scan(base_url, html_body)
+
+    all_findings.extend(secret_results.get("findings", []))
+
+    # 7. Admin Portal & Management Gateway Auditor
+    if console:
+        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
+            progress.add_task(description="[cyan]6/8 Checking for publicly exposed admin & debug portals...", total=None)
+            admin_auditor = AdminAuditor(timeout=args.timeout)
+            admin_results = admin_auditor.audit(base_url)
+    else:
+        print("[*] 6/8 Checking admin portals...")
+        admin_auditor = AdminAuditor(timeout=args.timeout)
+        admin_results = admin_auditor.audit(base_url)
+
+    all_findings.extend(admin_results.get("findings", []))
+
+    # 8. Optional Crawler
     crawl_data = {}
     if args.crawl:
         if console:
             with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-                progress.add_task(description="[cyan]5/6 Crawling internal pages & authentication portals...", total=None)
+                progress.add_task(description="[cyan]7/8 Crawling internal pages & authentication portals...", total=None)
                 crawler = LightweightCrawler(timeout=args.timeout)
                 crawl_data = crawler.crawl(base_url)
         else:
-            print("[*] 5/6 Crawling internal pages...")
+            print("[*] 7/8 Crawling internal pages...")
             crawler = LightweightCrawler(timeout=args.timeout)
             crawl_data = crawler.crawl(base_url)
 
-    # 7. Plain-English Executive Translation
+    # 9. Plain-English Executive Translation with Code Locations
     translator = PlainEnglishTranslator()
     executive_findings = translator.generate_executive_brief(all_findings)
 
-    # 8. Regulatory Compliance Assessment
+    # 10. Regulatory Compliance Assessment
     compliance_auditor = ComplianceAuditor()
     compliance_data = compliance_auditor.evaluate_compliance(all_findings)
 
-    # 9. Patch Generation (Nginx, Apache, Caddy)
+    # 11. Patch Generation (Nginx, Apache, Caddy)
     patch_gen = PatchGenerator()
     missing_hdrs = headers_audit.get("missing_headers", [])
     nginx_patch = patch_gen.generate_nginx_config(missing_hdrs)
     apache_patch = patch_gen.generate_apache_config(missing_hdrs)
     caddy_patch = patch_gen.generate_caddy_config(missing_hdrs)
 
-    # Overall Scoring
+    # Overall Scoring Calculation
     total_deductions = sum(25 if f.get("severity") == "CRITICAL" else (15 if f.get("severity") == "HIGH" else (8 if f.get("severity") == "MEDIUM" else 3)) for f in all_findings)
     final_score = max(5, 100 - total_deductions)
     final_grade = "A+" if final_score >= 95 else ("A" if final_score >= 85 else ("B" if final_score >= 70 else ("C" if final_score >= 55 else ("D" if final_score >= 40 else "F"))))
@@ -194,6 +224,8 @@ def main():
         "cookie_results": cookie_results,
         "email_sec": email_sec,
         "exposed_files": exposure_results.get("exposed_files", []),
+        "secret_results": secret_results,
+        "admin_portals": admin_results.get("portals", []),
         "crawl_data": crawl_data,
         "executive_findings": executive_findings,
         "compliance": compliance_data,
@@ -203,7 +235,7 @@ def main():
         "caddy_patch": caddy_patch
     }
 
-    # Render Terminal Output
+    # Render Terminal Output with Matrix
     generator = ReportGenerator(report_payload)
     generator.print_terminal_dashboard()
 
