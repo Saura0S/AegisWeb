@@ -156,6 +156,7 @@ class ReportGenerator:
         """Ensure reports are always saved in the website's dedicated folder inside reports/ (e.g. reports/example.com/)."""
         domain = self.data.get("domain", "unknown_target").strip()
         safe_domain = domain.replace(":", "_").replace("/", "_").replace("\\", "_")
+        safe_domain_underscore = safe_domain.replace(".", "_")
 
         if not dest or dest.strip() in ["reports", "reports/", ".", "./", ""]:
             return os.path.join("reports", safe_domain)
@@ -165,10 +166,11 @@ class ReportGenerator:
             dest = os.path.dirname(dest) or os.path.join("reports", safe_domain)
 
         norm = os.path.normpath(dest)
-        if not norm.endswith(safe_domain):
-            return os.path.join(norm, safe_domain)
+        base = os.path.basename(norm)
+        if base == safe_domain or base == safe_domain_underscore:
+            return norm
 
-        return norm
+        return os.path.join(norm, safe_domain)
 
     def interactive_export_menu(self, default_dir: str):
         """Prompt user interactively to select report save options and target directory."""
