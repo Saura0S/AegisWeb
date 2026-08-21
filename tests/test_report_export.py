@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for ReportGenerator export methods and directory isolation
 """
 
@@ -6,11 +6,16 @@ import os
 import shutil
 import tempfile
 from aegisweb.reports.generator import ReportGenerator
+from aegisweb.reports.compliance import ComplianceAuditor
+from aegisweb.reports.owasp_matrix import OWASPAuditor
 
 
 def test_export_all_isolated_directory():
     test_dir = tempfile.mkdtemp()
     target_reports_dir = os.path.join(test_dir, "reports", "example_com")
+
+    compliance_data = ComplianceAuditor().evaluate_compliance([])
+    owasp_data = OWASPAuditor().audit([])
 
     sample_payload = {
         "domain": "example.com",
@@ -20,8 +25,8 @@ def test_export_all_isolated_directory():
         "ssl_info": {"has_ssl": True, "protocol_version": "TLSv1.3", "days_remaining": 85},
         "email_sec": {"spoofing_vulnerable": False, "dmarc_strength": "Strict"},
         "headers_audit": {"missing_headers": []},
-        "compliance": {"overall_governance_score": 92},
-        "owasp": {"owasp_compliance_score": 95, "categories": {}},
+        "compliance": compliance_data,
+        "owasp": owasp_data,
         "secret_results": {"leaks": []},
         "admin_portals": [],
         "exposed_files": [],
