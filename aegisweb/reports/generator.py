@@ -152,10 +152,10 @@ class ReportGenerator:
         )
         self.console.print(Panel(verdict_panel_text, title="[bold cyan]👨‍💻 Lead Security Architect Verdict (Saura0S)[/]", border_style="cyan"))
 
-    def interactive_export_menu(self, default_prefix: str):
-        """Prompt user interactively to select report save options and custom directory."""
+    def interactive_export_menu(self, default_dir: str):
+        """Prompt user interactively to select report save options and target directory."""
         if not self.console:
-            self.export_all(default_prefix)
+            self.export_all(default_dir)
             return
 
         menu_text = (
@@ -174,35 +174,70 @@ class ReportGenerator:
             self.console.print("[dim]Skipped saving reports.[/]")
             return
 
-        # Prompt for destination folder
-        dest_dir = Prompt.ask("[bold cyan]📁 Enter destination directory to save report[/]", default="reports")
+        # Prompt for destination folder (defaults to reports/<target_domain>)
+        dest_dir = Prompt.ask("[bold cyan]📁 Enter destination directory to save reports[/]", default=default_dir)
         os.makedirs(dest_dir, exist_ok=True)
-        
-        prefix = os.path.join(dest_dir, os.path.basename(default_prefix))
 
         if choice == "1":
-            self.export_all(prefix)
+            self.export_all(dest_dir)
         elif choice == "2":
-            self.export_plain_text(f"{prefix}_executive_summary.md")
+            self.export_plain_text(os.path.join(dest_dir, "executive_summary.md"))
         elif choice == "3":
-            self.export_html(f"{prefix}.html")
+            self.export_html(os.path.join(dest_dir, "audit_report.html"))
         elif choice == "4":
-            self.export_json(f"{prefix}.json")
+            self.export_json(os.path.join(dest_dir, "scan_dataset.json"))
         elif choice == "5":
-            self.export_patches(prefix)
+            self.export_patches(dest_dir)
 
-    def export_all(self, prefix: str):
-        """Export HTML, plain-text markdown, JSON, and server patches."""
-        self.export_html(f"{prefix}.html")
-        self.export_plain_text(f"{prefix}_executive_summary.md")
-        self.export_json(f"{prefix}.json")
-        self.export_patches(prefix)
+    def export_all(self, target_dir: str):
+        """Export HTML, plain-text markdown, JSON, and server patches into target directory."""
+        # If a file path was passed by mistake, extract directory
+        if os.path.splitext(target_dir)[1]:
+            target_dir = os.path.dirname(target_dir) or "reports"
 
-    def export_patches(self, prefix: str):
-        """Save Nginx, Apache, and Caddy patch files."""
-        nginx_file = f"{prefix}_nginx_patch.conf"
-        apache_file = f"{prefix}_apache_patch.htaccess"
-        caddy_file = f"{prefix}_caddy_patch.Caddyfile"
+        os.makedirs(target_dir, exist_ok=True)
+
+        html_file = os.path.join(target_dir, "audit_report.html")
+        plain_file = os.path.join(target_dir, "executive_summary.md")
+        json_file = os.path.join(target_dir, "scan_dataset.json")
+        nginx_file = os.path.join(target_dir, "nginx_patch.conf")
+        apache_file = os.path.join(target_dir, "apache_patch.htaccess")
+        caddy_file = os.path.join(target_dir, "caddy_patch.Caddyfile")
+
+        self.export_html(html_file, quiet=True)
+        self.export_plain_text(plain_file, quiet=True)
+        self.export_json(json_file, quiet=True)
+
+        with open(nginx_file, "w", encoding="utf-8") as f:
+            f.write(self.data.get("nginx_patch", ""))
+        with open(apache_file, "w", encoding="utf-8") as f:
+            f.write(self.data.get("apache_patch", ""))
+        with open(caddy_file, "w", encoding="utf-8") as f:
+            f.write(self.data.get("caddy_patch", ""))
+
+        if self.console:
+            tree_text = (
+                f"[bold green]✔ All audit reports successfully saved to:[/] [bold cyan]{target_dir}[/]\n"
+                f"  ├── 📄 [white]audit_report.html[/] [dim](Interactive SPA & PDF Print)[/]\n"
+                f"  ├── 👔 [white]executive_summary.md[/] [dim](Plain-English CISO Brief)[/]\n"
+                f"  ├── 💻 [white]scan_dataset.json[/] [dim](Technical CI/CD Dataset)[/]\n"
+                f"  ├── 🛠️ [white]nginx_patch.conf[/] [dim](Nginx Remediation Patch)[/]\n"
+                f"  ├── 🛠️ [white]apache_patch.htaccess[/] [dim](Apache Remediation Patch)[/]\n"
+                f"  └── 🛠️ [white]caddy_patch.Caddyfile[/] [dim](Caddy Remediation Patch)[/]"
+            )
+            self.console.print(Panel(tree_text, title="[bold cyan]📁 Generated Security Dossier[/]", border_style="green"))
+        else:
+            print(f"[+] All reports exported to directory: {target_dir}")
+
+    def export_patches(self, target_dir: str):
+        """Save Nginx, Apache, and Caddy patch files into target directory."""
+        if os.path.splitext(target_dir)[1]:
+            target_dir = os.path.dirname(target_dir) or "reports"
+        os.makedirs(target_dir, exist_ok=True)
+
+        nginx_file = os.path.join(target_dir, "nginx_patch.conf")
+        apache_file = os.path.join(target_dir, "apache_patch.htaccess")
+        caddy_file = os.path.join(target_dir, "caddy_patch.Caddyfile")
         
         with open(nginx_file, "w", encoding="utf-8") as f:
             f.write(self.data.get("nginx_patch", ""))
@@ -216,8 +251,15 @@ class ReportGenerator:
             self.console.print(f"[bold green]✔[/] Ready-to-paste Apache patch: [cyan]{apache_file}[/]")
             self.console.print(f"[bold green]✔[/] Ready-to-paste Caddy patch: [cyan]{caddy_file}[/]")
 
-    def export_html(self, output_file: str):
+    def export_html(self, output_file: str, quiet: bool = False):
         """Generate interactive SPA HTML report with PDF print capabilities."""
+        if not output_file.endswith(".html"):
+            output_file = os.path.join(output_file, "audit_report.html")
+
+        out_dir = os.path.dirname(output_file)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
         template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
         score = self.data.get("score_percentage", 0)
         vulnerability_pct = max(0, min(100, 100 - score))
@@ -265,11 +307,18 @@ class ReportGenerator:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_out)
 
-        if self.console:
+        if self.console and not quiet:
             self.console.print(f"[bold green]✔[/] Interactive SPA HTML report generated: [cyan]{output_file}[/]")
 
-    def export_plain_text(self, output_file: str):
+    def export_plain_text(self, output_file: str, quiet: bool = False):
         """Generate client-ready plain English executive markdown/text document with code evidence locations."""
+        if not output_file.endswith(".md") and not output_file.endswith(".txt"):
+            output_file = os.path.join(output_file, "executive_summary.md")
+
+        out_dir = os.path.dirname(output_file)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
         score = self.data.get("score_percentage", 0)
         vulnerability_pct = max(0, min(100, 100 - score))
         
@@ -323,11 +372,18 @@ class ReportGenerator:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
 
-        if self.console:
+        if self.console and not quiet:
             self.console.print(f"[bold green]✔[/] Plain-English Executive Summary exported: [cyan]{output_file}[/]")
 
-    def export_json(self, output_file: str):
+    def export_json(self, output_file: str, quiet: bool = False):
         """Export structured JSON dataset with vulnerability percentage."""
+        if not output_file.endswith(".json"):
+            output_file = os.path.join(output_file, "scan_dataset.json")
+
+        out_dir = os.path.dirname(output_file)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
         score = self.data.get("score_percentage", 0)
         json_data = dict(self.data)
         json_data["vulnerability_exposure_percentage"] = max(0, min(100, 100 - score))
@@ -336,5 +392,5 @@ class ReportGenerator:
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=2)
 
-        if self.console:
+        if self.console and not quiet:
             self.console.print(f"[bold green]✔[/] Technical JSON dataset exported: [cyan]{output_file}[/]")

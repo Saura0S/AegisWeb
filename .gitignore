@@ -17,5 +17,9 @@ venv/
 !README.md
 !walkthrough.md
 !implementation_plan.md
+reports/
+*.conf
+*.htaccess
+*.Caddyfile
 .DS_Store
 Thumbs.db

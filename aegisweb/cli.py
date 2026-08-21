@@ -245,23 +245,29 @@ def main():
     generator = ReportGenerator(report_payload)
     generator.print_terminal_dashboard()
 
-    # Determine Export Action
-    prefix = args.output or f"aegisweb_{domain.replace('.', '_')}"
+    # Determine Target Reports Directory (Default: reports/<target_domain>/)
+    safe_domain_folder = domain.replace(":", "_").replace("/", "_")
+    default_report_dir = os.path.join("reports", safe_domain_folder)
+    target_output = args.output if args.output else default_report_dir
     has_explicit_export = args.all_reports or args.html or args.plain or args.json
 
     if has_explicit_export:
         if args.all_reports:
-            generator.export_all(prefix)
+            generator.export_all(target_output)
         else:
+            # If target_output is a file path (has extension) or directory
             if args.html:
-                generator.export_html(f"{prefix}.html")
+                html_path = target_output if (target_output.endswith(".html")) else os.path.join(target_output, "audit_report.html")
+                generator.export_html(html_path)
             if args.plain:
-                generator.export_plain_text(f"{prefix}_executive_summary.md")
+                plain_path = target_output if (target_output.endswith(".md") or target_output.endswith(".txt")) else os.path.join(target_output, "executive_summary.md")
+                generator.export_plain_text(plain_path)
             if args.json:
-                generator.export_json(f"{prefix}.json")
+                json_path = target_output if (target_output.endswith(".json")) else os.path.join(target_output, "scan_dataset.json")
+                generator.export_json(json_path)
     else:
-        # Launch Interactive Save Menu
-        generator.interactive_export_menu(prefix)
+        # Launch Interactive Save Menu defaulting to reports/<target_domain>/
+        generator.interactive_export_menu(default_report_dir)
 
     if console:
         console.print(f"\n[bold green]✔[/] AegisWeb Audit Completed in [cyan]{report_payload['scan_time_seconds']}s[/]!\n")
