@@ -17,7 +17,7 @@ venv/
 !README.md
 !walkthrough.md
 !implementation_plan.md
-reports/
+/reports/
 *.conf
 *.htaccess
 *.Caddyfile
