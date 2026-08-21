@@ -152,10 +152,29 @@ class ReportGenerator:
         )
         self.console.print(Panel(verdict_panel_text, title="[bold cyan]👨‍💻 Lead Security Architect Verdict (Saura0S)[/]", border_style="cyan"))
 
+    def _resolve_target_dir(self, dest: str) -> str:
+        """Ensure reports are always saved in the website's dedicated folder inside reports/ (e.g. reports/example.com/)."""
+        domain = self.data.get("domain", "unknown_target").strip()
+        safe_domain = domain.replace(":", "_").replace("/", "_").replace("\\", "_")
+
+        if not dest or dest.strip() in ["reports", "reports/", ".", "./", ""]:
+            return os.path.join("reports", safe_domain)
+
+        # If dest is a filepath with an extension, extract dirname
+        if os.path.splitext(dest)[1]:
+            dest = os.path.dirname(dest) or os.path.join("reports", safe_domain)
+
+        norm = os.path.normpath(dest)
+        if not norm.endswith(safe_domain):
+            return os.path.join(norm, safe_domain)
+
+        return norm
+
     def interactive_export_menu(self, default_dir: str):
         """Prompt user interactively to select report save options and target directory."""
+        resolved_default = self._resolve_target_dir(default_dir)
         if not self.console:
-            self.export_all(default_dir)
+            self.export_all(resolved_default)
             return
 
         menu_text = (
@@ -175,7 +194,8 @@ class ReportGenerator:
             return
 
         # Prompt for destination folder (defaults to reports/<target_domain>)
-        dest_dir = Prompt.ask("[bold cyan]📁 Enter destination directory to save reports[/]", default=default_dir)
+        dest_input = Prompt.ask("[bold cyan]📁 Enter destination directory to save reports[/]", default=resolved_default)
+        dest_dir = self._resolve_target_dir(dest_input)
         os.makedirs(dest_dir, exist_ok=True)
 
         if choice == "1":
@@ -190,11 +210,8 @@ class ReportGenerator:
             self.export_patches(dest_dir)
 
     def export_all(self, target_dir: str):
-        """Export HTML, plain-text markdown, JSON, and server patches into target directory."""
-        # If a file path was passed by mistake, extract directory
-        if os.path.splitext(target_dir)[1]:
-            target_dir = os.path.dirname(target_dir) or "reports"
-
+        """Export HTML, plain-text markdown, JSON, and server patches into the website's dedicated directory."""
+        target_dir = self._resolve_target_dir(target_dir)
         os.makedirs(target_dir, exist_ok=True)
 
         html_file = os.path.join(target_dir, "audit_report.html")
@@ -231,8 +248,7 @@ class ReportGenerator:
 
     def export_patches(self, target_dir: str):
         """Save Nginx, Apache, and Caddy patch files into target directory."""
-        if os.path.splitext(target_dir)[1]:
-            target_dir = os.path.dirname(target_dir) or "reports"
+        target_dir = self._resolve_target_dir(target_dir)
         os.makedirs(target_dir, exist_ok=True)
 
         nginx_file = os.path.join(target_dir, "nginx_patch.conf")

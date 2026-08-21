@@ -54,3 +54,24 @@ def test_export_all_isolated_directory():
 
     # Cleanup
     shutil.rmtree(test_dir)
+
+
+def test_resolve_target_dir_auto_nesting():
+    sample_payload = {
+        "domain": "example.com",
+        "grade": "A",
+        "score_percentage": 95
+    }
+    generator = ReportGenerator(sample_payload)
+
+    # Passing 'reports' should auto-nest under 'reports/example.com'
+    resolved = generator._resolve_target_dir("reports")
+    assert resolved == os.path.join("reports", "example.com")
+
+    # Passing empty string should auto-nest under 'reports/example.com'
+    resolved_empty = generator._resolve_target_dir("")
+    assert resolved_empty == os.path.join("reports", "example.com")
+
+    # Passing 'reports/example.com' should stay 'reports/example.com'
+    resolved_exact = generator._resolve_target_dir("reports/example.com")
+    assert resolved_exact == os.path.normpath("reports/example.com")
